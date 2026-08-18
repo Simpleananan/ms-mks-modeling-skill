@@ -48,4 +48,4 @@ The scanner is intentionally conservative and does not replace GitHub secret sca
 
 ## License
 
-No license is bundled in this package. Choose and add a license before public release if you want others to have explicit reuse rights.
+All rights reserved. This repository is published for reference and evaluation purposes only; copying, redistribution, derivative works, and commercial use are prohibited. See [LICENSE](LICENSE).
