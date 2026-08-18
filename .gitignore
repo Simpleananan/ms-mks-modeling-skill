@@ -1,0 +1,37 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+config.local.*
+secrets.*
+credentials.*
+
+# Derived local evidence indexes / caches
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+.cache/
+cache/
+__pycache__/
+*.py[cod]
+
+# Research-local state and private corpora
+.modeling/
+local_corpus/
+private_corpus/
+review_response_corpus/
+process_materials/
+
+# Logs / OS / editor
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
