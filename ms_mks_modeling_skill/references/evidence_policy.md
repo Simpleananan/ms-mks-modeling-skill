@@ -33,7 +33,7 @@ Never reconstruct D2/D3 details from D0/D1. If full text is unavailable, downgra
 
 ## Source priority and scope
 
-1. Resolve the evidence-source mode first. In HYBRID mode search authorized local paper/process sources before web fallback; in WEB_ONLY mode start with authoritative web sources; in LOCAL_ONLY mode state corpus-coverage limits.
+1. Search the authorized local paper knowledge base first.
 2. For current MS/MKS modeling norms, nearest neighbors, and contemporary exemplars, prioritize Management Science and Marketing Science from roughly the last 3–5 years.
 3. Use other UTD journals when the research domain or formal neighbor requires them.
 4. Classic theory, mathematical methods, correction/comment/rejoinder, and AI-method evidence are not restricted to UTD journals.

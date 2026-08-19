@@ -48,15 +48,17 @@ Do not make the user formalize a model before helping. When the input is a quest
 1. Recover facts already present in the prompt and supplied sources; do not ask for them again.
 2. Identify the institutional feature, strategic actors, strategic tension, and the allocation of information, commitment, and control rights.
 3. State a provisional research object and the endogenous decisions that could carry it.
-4. Form a small set of non-equivalent research questions and minimum formalizations. Keep them provisional.
-5. Retrieve structurally close work when evidence could eliminate, sharpen, or rank a branch.
-6. Compare the branches before asking the user. Ask one batched question only if the surviving alternatives change the research object or formal game and evidence cannot select one.
+4. Test whether the provisional path is already coherent. Form multiple non-equivalent research questions or minimum formalizations only when a live ambiguity or obstacle creates a decision-relevant branch. Keep any branch provisional.
+5. Retrieve structurally close work when evidence could eliminate, sharpen, or rank a live branch.
+6. Compare branches before asking the user when branches exist. Ask one batched question only if the surviving alternatives change the research object or formal game and evidence cannot select one.
 
 When the user is unsure what to study, report what the setting could support, why the viable questions differ, which direction currently has the strongest case, and the largest unresolved uncertainty. Preserve two branches when a reliable ranking is unavailable. Sparse-idea generation remains experimental.
 
 ## Target-paper reconstruction
 
 Before extending a target paper, reconstruct its research question, institution, players, timing, information, actions, payoffs, solution concept, main mechanism, load-bearing assumptions, and claim boundary. Record the function of a formal benchmark when one exists; otherwise identify the comparison, decomposition, or proof dependency that isolates the result. Inspect the main text and relevant appendix. The abstract cannot support formal details.
+
+Match the reconstruction to the user's objective. For paper understanding, recover and explain the paper's own structure and load-bearing dependency without adding an unsolicited model audit or broader literature search. Activate critique, nearest-neighbor comparison, or redesign only when the user asks for evaluation or extension, or when an unresolved inconsistency prevents faithful reconstruction.
 
 Evaluate a proposed change through its causal path: primitive change; strategic-response change; equilibrium consequence; prediction, welfare, or boundary consequence; new endogenous feedback. Adding a variable, actor, heterogeneity, a continuous version of a binary choice, a new industry label, or extra realism does not establish a contribution without that path.
 
@@ -78,6 +80,8 @@ If chronology evidence is absent, state once that the explanation reconstructs d
 7. Preserve non-equivalent formalizations when they imply different timing, information, feasible deviations, or equilibria.
 8. Mark sparse-idea constructions as candidates, not validated models.
 
+Before judging contribution or projecting a compressed answer, verify that the model contains every object needed to define feasible strategies and the stated solution or equilibrium concept. A user-facing overview may omit already verified details; the internal construction and validation may not.
+
 ## Literature streams and recomposition
 
 Split retrieval into mechanism streams when a question draws on distinct formal traditions, such as search, information design, and price competition. Use each stream to recover canonical primitives, timing, information, actions, and strategic responses. Recompose only after checking the model-level connection.
@@ -95,7 +99,7 @@ Topical overlap alone does not justify combination. Put a weakly connected strea
 
 ## Candidate generation and evaluation
 
-Generate several non-equivalent candidates before recommending one. Do not recommend the first plausible idea. Compare only dimensions that can affect the research decision:
+Generate multiple non-equivalent candidates only when the current path fails or a live design choice could change the research object, strategic mechanism, timing/information/actions, equilibrium, contribution, institutional interpretation, or tractability. If one coherent path already answers the research question and no unresolved condition could plausibly reverse that assessment, proceed with it instead of inventing alternatives. When candidates are live, do not recommend the first plausible idea; compare only dimensions that can affect the research decision:
 
 - research-question, primitive, mechanism, and strategic-response deltas;
 - fit with the institution;
@@ -120,6 +124,10 @@ When asked for one direction, complete the comparison internally and choose amon
 - **INCONCLUSIVE** when missing nearest-neighbor evidence, unresolved formal feasibility, or an unspecified objective could plausibly change the winner.
 
 For a selection, return one recommendation with its minimum viable model and largest risk. Include one runner-up only when it exposes a consequential trade-off. Do not convert a narrative preference or a paper's precedent into dominance.
+
+## Research convergence
+
+Recommend freezing the baseline and moving to formal solution or validation when it carries the research question, its formal game is sufficiently closed, its claim-bearing mechanism is identifiable, no unresolved structural veto could plausibly overturn it, and the available nearest-neighbor evidence is adequate for the current decision. Continue exploration only when a live uncertainty has realistic decision value. Do not delay the baseline for optional realism, another extension, or a merely imaginable candidate; record these as later tests when material.
 
 ## Activate checks from structure
 

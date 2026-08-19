@@ -1,16 +1,6 @@
-# Evidence retrieval contract
+# Local retrieval contract
 
-Load this reference before running `scripts/local_evidence_retrieval.py`, choosing local/web source mode, or deciding local-to-web fallback. Also load `evidence_policy.md` to qualify retrieved passages.
-
-## Source-mode gate
-
-Local evidence is optional, not a prerequisite. Resolve one mode before literature retrieval:
-
-- **HYBRID** — authorized local paper and/or review-response materials are available. Search them first and use web retrieval for live evidence gaps.
-- **WEB_ONLY** — no authorized local source is available, or the user declines local scanning. Retrieve from the web and continue the same modeling/validation workflow.
-- **LOCAL_ONLY** — only when the user explicitly disallows web retrieval; report corpus-coverage limitations.
-
-If uploaded papers or review/response materials are already present, treat them as authorized local evidence for the current task and do not ask again. If retrieval is needed and no local source is known, ask once whether the user wants local paper/review-response sources combined with web search. Never send private full text, reviewer text, response text, local paths, or manuscript identifiers to a web search service; use public DOI/title metadata or a de-identified structural query.
+Load this reference before running `scripts/local_evidence_retrieval.py` or deciding local-to-web fallback. Also load `evidence_policy.md` to qualify retrieved passages.
 
 ## Architecture and write boundary
 
@@ -23,8 +13,8 @@ The index is disposable derived data. Keep it outside every source root. The scr
 ## Commands
 
 ```powershell
-python scripts/local_evidence_retrieval.py build --db <derived-index.sqlite> --paper-root <paper-root> --process-root <review-response-root>
-python scripts/local_evidence_retrieval.py update --db <derived-index.sqlite> --paper-root <paper-root> --process-root <review-response-root>
+python scripts/local_evidence_retrieval.py build --db <derived-index.sqlite> --root <paper-root> --root <process-root>
+python scripts/local_evidence_retrieval.py update --db <derived-index.sqlite> --root <paper-root> --root <process-root>
 python scripts/local_evidence_retrieval.py search --db <derived-index.sqlite> --query 'platform AND disclosure' --limit 8 --passages-per-work 2 --format jsonl
 python scripts/local_evidence_retrieval.py inspect --db <derived-index.sqlite> --chunk-id <id> --context 1
 python scripts/local_evidence_retrieval.py stats --db <derived-index.sqlite> --format json
@@ -52,17 +42,15 @@ Roles are `MAIN_ARTICLE`, `ONLINE_APPENDIX`, `COMMENT_CORRECTION`, and `PROCESS_
 
 The script deliberately does not decide semantic relevance, modeling quality, evidence depth, or whether a citation supports a claim.
 
-## Hybrid/local-to-web fallback
+## Local-first and web fallback
 
-In **HYBRID** mode, start with authorized local sources and trigger official web retrieval when a live evidence need remains and one of these holds:
+Start locally for every literature-bearing question. Trigger official web retrieval only when a live evidence need remains and one of these holds:
 
 - no structurally close local work was found after reasonable query reformulation;
-- local evidence stops at D0/D1 for a D2/D3 judgment;
+- only D0/D1 evidence is available for a D2/D3 judgment;
 - recent MS/MKS norms or publications may change the nearest-neighbor or contribution comparison;
 - local evidence conflicts and an official article, appendix, correction, or version is needed;
 - a decisive DOI, appendix, or passage is missing locally.
-
-In **WEB_ONLY** mode, begin with authoritative web retrieval immediately and apply the same D0-D4 qualification, usefulness gate, version checks, and decision-delta stopping rule. Absence of a local corpus must not lower the formal modeling/validation standard.
 
 Prioritize official Management Science/Marketing Science sources, then other relevant UTD journals. Record why fallback was triggered. Do not use web search to compensate for an unformulated evidence need.
 

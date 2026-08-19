@@ -11,7 +11,7 @@ Improve research decisions through a traceable chain:
 
 Let prompt completeness change routing, never research quality. Use supplied facts without asking for them again.
 
-## P0: route the starting state
+## P0: route the starting state and task
 
 Infer the state silently; never show a mode menu.
 
@@ -20,21 +20,11 @@ Infer the state silently; never show a mode menu.
 - Route a research question, phenomenon, institution, case, vague topic, or an unsure user to orientation and exploratory modeling.
 - Route advisor, senior, reviewer, or editor feedback to independent proposal evaluation.
 
+Also identify what the user needs now: faithful paper understanding, formal validation, construction or solution, candidate comparison, repair, or revision. Let that objective activate the passes. Do not turn reconstruction into critique, or a decidable calculation into literature review, unless the requested conclusion requires it.
+
 Classify missing information as **source-resolvable**, **nonblocking**, or **blocking**. Recover source-resolvable facts from supplied materials or authorized sources. Defer nonblocking gaps. Ask once, in a batch, only when unresolved alternatives change the research object, formal game, timing, information, actions, equilibrium concept, or major contribution direction and evidence does not favor one.
 
-For orientation or exploratory modeling, identify the institution, actors, strategic tension, uncertainty/information/control rights, and a small set of non-equivalent research questions or formalizations. Retrieve structurally relevant evidence when it can separate them. Compare candidates before recommending; retain two branches when evidence cannot rank them. Read [modeling_and_validation.md](references/modeling_and_validation.md) for orientation, target-paper reconstruction, candidate comparison, solution logic, and validation.
-
-## Resolve the evidence source mode
-
-Before P2 retrieval, determine the evidence-source mode without making local access a prerequisite.
-
-- If the current conversation already contains papers, appendices, reviewer/editor comments, decision letters, response letters, or an explicitly authorized local knowledge-base location, use those materials directly; do not ask again.
-- If retrieval is needed but no local evidence source is known, ask once whether the user wants to combine an authorized local paper/review-response knowledge base with web search. Do not request local access when the task is fully decidable from the supplied model or when the user already chose web-only.
-- **HYBRID**: when local sources are available and authorized, retrieve from local paper materials and local review/response materials first, then use web retrieval when a live evidence gap remains.
-- **WEB_ONLY**: when no local source exists or the user declines local scanning, continue with web retrieval alone. The modeling, validation, evidence-depth, and process-evidence rules remain unchanged.
-- **LOCAL_ONLY**: use only when the user explicitly prohibits web retrieval. Report coverage limits rather than silently treating the local corpus as complete.
-
-Never upload private full text, reviewer comments, decision letters, response letters, local paths, manuscript identifiers, or other nonpublic material into web queries. When web verification is useful, query only public bibliographic metadata or a de-identified structural research question.
+For orientation or exploratory modeling, identify the institution, actors, strategic tension, and uncertainty/information/control rights. Generate alternative research questions or formalizations only when a live, decision-relevant branch could change the research object, mechanism, timing/information/actions, equilibrium, contribution, institutional interpretation, or tractability. Otherwise advance the single coherent path. Retrieve structurally relevant evidence when it can separate live branches. Read [modeling_and_validation.md](references/modeling_and_validation.md) for orientation, target-paper reconstruction, candidate comparison, solution logic, and validation.
 
 ## Run conditional passes
 
@@ -43,14 +33,14 @@ Do not force every pass into every task.
 1. **P1 Understand** — reconstruct the model or orient the sparse input; preserve supplied commitments and mark unresolved dependencies.
 2. **P2 Retrieve** — run only when evidence can change a formalization, check, claim boundary, verdict, uncertainty, exemplar, or candidate comparison. Read [evidence_policy.md](references/evidence_policy.md); before local retrieval also read [retrieval_contract.md](references/retrieval_contract.md).
 3. **P3 Build / Diagnose / Solve** — construct a model no larger than the research question requires; or locate the strongest claim-bearing failure and turn it into a causal obstacle to solve. Do not stop at a negative verdict when a credible repair, redesign, discriminating calculation, or revision of the research intuition remains available.
-4. **P4 Evidence Critic** — apply independent judgment symmetrically: neither agreement nor disagreement earns credit. Test the few load-bearing claims whose failure could change the research question, model identity, mechanism, equilibrium, main claim, contribution, or welfare implication. Verify a decidable uncertainty before judging it. Accept a supported abstraction whose relaxation would not affect the claimed mechanism; do not paraphrase P3 skeptically or manufacture objections.
-5. **P5 Synthesize** — adjudicate candidates, calibrate whether the result supports a selection, a conditional selection, or no reliable ranking, give scoped statuses, preserve materially viable branches, and identify the next action or one batched blocking decision.
+4. **P4 Evidence Critic** — run when endorsing a model, diagnosis, candidate, contribution, or other consequential research judgment; skip a separate critic pass for faithful reconstruction or a fully decidable calculation. Apply independent judgment symmetrically: neither agreement nor disagreement earns credit. Test the few load-bearing claims whose failure could change the research question, model identity, mechanism, equilibrium, main claim, contribution, or welfare implication. Verify a decidable uncertainty before judging it. Accept a supported abstraction whose relaxation would not affect the claimed mechanism; do not paraphrase P3 skeptically or manufacture objections.
+5. **P5 Synthesize** — adjudicate live candidates when they exist, calibrate whether the result supports a selection, a conditional selection, or no reliable ranking, give scoped statuses, and identify the next action or one batched blocking decision. When a baseline already answers the research question, the game is closed enough to solve, the mechanism is identifiable, and no unresolved structural veto could plausibly reverse the choice, stop expanding candidates and recommend formalization, solution, or validation. Treat remaining robustness, extension, and exposition work as later work unless it threatens the baseline.
 
 For consequential stakeholder proposals, read [feedback_and_decisions.md](references/feedback_and_decisions.md). Treat authority, repetition, user approval, and reflexive opposition as irrelevant to epistemic confidence. Follow explicit research constraints without presenting them as academic support.
 
 ## Retrieve only for a live evidence need
 
-Usually retrieve for modeling norms, target-paper reconstruction, comparable or nearest-neighbor papers, assumption justification, institutional realism, mechanism/contribution comparison, and literature claims in external feedback. Use the resolved evidence-source mode: HYBRID when authorized local sources exist, WEB_ONLY when they do not, and LOCAL_ONLY only on explicit request. Follow [retrieval_contract.md](references/retrieval_contract.md).
+Usually inspect sources for modeling norms, target-paper reconstruction, comparable or nearest-neighbor papers, assumption justification, institutional realism, mechanism/contribution comparison, and literature claims in external feedback. For target-paper reconstruction, inspect the supplied or local main article and relevant appendix; search wider literature only when a comparison, ambiguity, precedent, or contribution question creates a live evidence need. Start locally; use web fallback only under [retrieval_contract.md](references/retrieval_contract.md).
 
 Skip retrieval for fully specified algebra, derivatives, concavity, equilibrium substitution, deterministic computation, or contradictions decidable from the supplied model. Use Python or SymPy for the specific check when useful.
 
@@ -66,7 +56,7 @@ Update the Working Model Draft after formal changes. **Draft follows model; draf
 
 ## Project the answer onto the user's decision
 
-Finish the required P0–P5 work and formal/evidence checks before composing. Lead with the current judgment, two to four decisive reasons, and the recommended next action. Add mechanism logic, decisive assumptions or benchmark, evidence/examples, and the main uncertainty only when they help the current decision. For “pick one direction,” show the primary recommendation, biggest risk, minimum viable model, and at most one runner-up unless the user asks for the full candidate set.
+Finish the required P0–P5 work and formal/evidence checks before composing. Before compression, confirm that every primitive, timing/information condition, action, payoff or constraint, and solution/equilibrium concept needed for the current derivation is specified or explicitly unresolved; omitting an object from the answer never permits omitting its verification. Lead with the current judgment, two to four decisive reasons, and the recommended next action. Add mechanism logic, decisive assumptions or benchmark, evidence/examples, and the main uncertainty only when they help the current decision. For “pick one direction,” show the primary recommendation, biggest risk, minimum viable model, and at most one runner-up unless the user asks for the full candidate set.
 
 Use explanation mode **AUTO**. Infer conceptual depth and formal display depth separately. A short prompt does not imply low expertise; a technical prompt does not request extensive derivation. Carry forward explicit preferences for directness, plain language, key formulas only, or complete proof until the context changes.
 

@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-"""Build, incrementally update, and query an optional local MS/MKS evidence index.
+"""Build, incrementally update, and query a local MS/MKS evidence index.
 
-Local sources are user-authorized read-only inputs and are explicitly classified
-as published-paper roots or review/response process roots. The SQLite database is
-disposable derived data and must live outside every source root. This script never
-performs web retrieval and never uploads local content. It performs lexical recall
-and work-level grouping; the calling model must do structural semantic reranking
-and evidence qualification. A BM25 score is never an evidence-strength score.
+The source roots are read-only inputs. The SQLite database is disposable derived
+data and must live outside every source root. This script performs lexical recall
+and work-level grouping; Codex must do structural semantic reranking and evidence
+qualification. A BM25 score is never an evidence-strength score.
 
 Dependencies: Python standard library and an installed ``pdftotext`` executable.
 """
@@ -29,7 +27,7 @@ import uuid
 import zipfile
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 1
 SUPPORTED_SUFFIXES = {".pdf", ".docx"}
 CANONICAL_ROLES = {
     "MAIN_ARTICLE",
@@ -39,6 +37,16 @@ CANONICAL_ROLES = {
     "OTHER",
 }
 FILENAME_ROLE = {"A": "MAIN_ARTICLE", "F": "ONLINE_APPENDIX"}
+
+# Process-evidence roots are designated explicitly, never by a machine-specific
+# folder name. Set MKS_PROCESS_ROOT_NAMES (comma-separated, case-insensitive) to
+# auto-classify roots whose folder name matches. Empty by default so the public
+# release carries no private knowledge-base naming.
+PROCESS_EVIDENCE_ROOT_NAMES = {
+    name.strip().lower()
+    for name in os.environ.get("MKS_PROCESS_ROOT_NAMES", "").split(",")
+    if name.strip()
+}
 
 
 def configure_stdout() -> None:
@@ -63,34 +71,36 @@ def path_is_within(path: Path, directory: Path) -> bool:
         return False
 
 
-def validate_locations(
-    db_path: Path, source_roots: list[tuple[Path, str]]
-) -> list[tuple[Path, str]]:
-    if not source_roots:
-        raise ValueError("At least one --paper-root or --process-root is required")
-    resolved: list[tuple[Path, str]] = []
-    seen: set[tuple[str, str]] = set()
-    db_real = db_path.resolve()
-    for root, source_kind in source_roots:
+def validate_locations(db_path: Path, roots: list[Path]) -> list[Path]:
+    if not roots:
+        raise ValueError("At least one --root is required")
+    resolved: list[Path] = []
+    seen: set[str] = set()
+    for root in roots:
         real = root.resolve()
         if not real.is_dir():
             raise ValueError(f"Source root is not a directory: {real}")
-        if path_is_within(db_real, real):
-            raise ValueError(
-                f"Derived index must be outside source root: db={db_real} root={real}"
-            )
-        key = (canonical_path(real), source_kind)
+        key = canonical_path(real)
         if key not in seen:
             seen.add(key)
-            resolved.append((real, source_kind))
+            resolved.append(real)
+    db_real = db_path.resolve()
+    for root in resolved:
+        if path_is_within(db_real, root):
+            raise ValueError(
+                f"Derived index must be outside source root: db={db_real} root={root}"
+            )
     return resolved
 
 
 def iter_source_files(root: Path):
     for directory, dirnames, filenames in os.walk(root, followlinks=False):
         directory_path = Path(directory)
+        # Avoid following symlinked/junction-like children when Python reports them.
         dirnames[:] = [
-            name for name in dirnames if not (directory_path / name).is_symlink()
+            name
+            for name in dirnames
+            if not (directory_path / name).is_symlink()
         ]
         for name in filenames:
             path = directory_path / name
@@ -98,17 +108,11 @@ def iter_source_files(root: Path):
                 yield path
 
 
-def scan_sources(source_roots: list[tuple[Path, str]]) -> list[tuple[str, str, str]]:
-    found: dict[str, tuple[str, str, str]] = {}
-    for root, source_kind in source_roots:
+def scan_sources(roots: list[Path]) -> list[tuple[str, str]]:
+    found: dict[str, tuple[str, str]] = {}
+    for root in roots:
         for path in iter_source_files(root):
-            key = canonical_path(path)
-            current = found.get(key)
-            if current is not None and current[2] != source_kind:
-                raise ValueError(
-                    f"The same file is reachable from paper and process roots: {path}"
-                )
-            found[key] = (str(path.resolve()), str(root.resolve()), source_kind)
+            found[canonical_path(path)] = (str(path.resolve()), str(root.resolve()))
     return [found[key] for key in sorted(found)]
 
 
@@ -124,8 +128,8 @@ def artifact_id_for(path: Path) -> str:
     return hashlib.sha1(canonical_path(path).encode("utf-8")).hexdigest()
 
 
-def classify_role(stem: str, source_kind: str, filename_role: str | None) -> str:
-    if source_kind == "process":
+def classify_role(stem: str, root: Path, filename_role: str | None) -> str:
+    if root.name.lower() in PROCESS_EVIDENCE_ROOT_NAMES:
         return "PROCESS_EVIDENCE"
     lowered = stem.lower()
     corrective_terms = (
@@ -144,7 +148,7 @@ def classify_role(stem: str, source_kind: str, filename_role: str | None) -> str
     return filename_role or "OTHER"
 
 
-def parse_source(path: Path, source_root: Path, source_kind: str) -> dict:
+def parse_source(path: Path, source_root: Path) -> dict:
     stat = path.stat()
     rel = path.relative_to(source_root).as_posix()
     stem = path.stem
@@ -171,7 +175,7 @@ def parse_source(path: Path, source_root: Path, source_kind: str) -> dict:
         year = "20" + canonical.group("yy")
         body = canonical.group("body").split("__", 1)[0]
         title = body.rsplit("_", 1)[-1].replace("- ", ": ").strip()
-    elif source_kind == "process":
+    elif source_root.name.lower() in PROCESS_EVIDENCE_ROOT_NAMES:
         if rel.startswith("ManagementScience/"):
             journal = "Management Science submission process"
         elif rel.startswith("MarketingScience/") or stem.startswith("MKSC-"):
@@ -189,13 +193,12 @@ def parse_source(path: Path, source_root: Path, source_kind: str) -> dict:
         journal = "Management Science / Marketing Science local corpus"
         title = stem.split("__", 1)[0]
 
-    role = classify_role(stem, source_kind, filename_role)
+    role = classify_role(stem, source_root, filename_role)
     return {
         "artifact_id": artifact_id_for(path),
         "source_path": str(path.resolve()),
         "source_root": str(source_root.resolve()),
-        "source_kind": source_kind,
-        "source_rel": f"{source_kind}/{rel}",
+        "source_rel": f"{source_root.name}/{rel}",
         "work_id": work_id,
         "role": role,
         "title": title,
@@ -277,10 +280,10 @@ def guess_section(text: str, default: str) -> str:
     return normalize_space(match.group(0))[:120] if match else default
 
 
-def extract_one(args: tuple[str, str, str]) -> dict:
-    path_s, root_s, source_kind = args
+def extract_one(args: tuple[str, str]) -> dict:
+    path_s, root_s = args
     path, root = Path(path_s), Path(root_s)
-    meta = parse_source(path, root, source_kind)
+    meta = parse_source(path, root)
     try:
         meta["content_hash"] = file_sha256(path)
         units = pdf_pages(path) if path.suffix.lower() == ".pdf" else docx_blocks(path)
@@ -327,7 +330,6 @@ CREATE TABLE documents (
   artifact_id TEXT UNIQUE NOT NULL,
   source_path TEXT UNIQUE NOT NULL,
   source_root TEXT NOT NULL,
-  source_kind TEXT NOT NULL,
   source_rel TEXT NOT NULL,
   work_id TEXT NOT NULL,
   role TEXT NOT NULL,
@@ -370,7 +372,6 @@ DOCUMENT_COLUMNS = (
     "artifact_id",
     "source_path",
     "source_root",
-    "source_kind",
     "source_rel",
     "work_id",
     "role",
@@ -401,14 +402,14 @@ def open_index(db_path: Path) -> sqlite3.Connection:
     return con
 
 
-def initialize_index(con: sqlite3.Connection, source_roots: list[tuple[Path, str]]) -> None:
+def initialize_index(con: sqlite3.Connection, roots: list[Path]) -> None:
     con.executescript(SCHEMA)
     con.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
     con.executemany(
         "INSERT INTO meta(key,value) VALUES (?,?)",
         [
             ("schema_version", str(SCHEMA_VERSION)),
-            ("source_roots", json.dumps([{"path": str(root), "kind": kind} for root, kind in source_roots], ensure_ascii=False)),
+            ("source_roots", json.dumps([str(root) for root in roots], ensure_ascii=False)),
             ("created_utc", str(int(time.time()))),
             ("last_update_utc", str(int(time.time()))),
         ],
@@ -467,7 +468,7 @@ def insert_document(con: sqlite3.Connection, item: dict) -> None:
         )
 
 
-def extract_many(paths: list[tuple[str, str, str]], workers: int):
+def extract_many(paths: list[tuple[str, str]], workers: int):
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         yield from pool.map(extract_one, paths)
 
@@ -483,16 +484,16 @@ def index_summary(con: sqlite3.Connection, db_path: Path) -> dict:
     }
 
 
-def build_index(db_path: Path, source_roots: list[tuple[Path, str]], workers: int) -> None:
-    source_roots = validate_locations(db_path, source_roots)
+def build_index(db_path: Path, roots: list[Path], workers: int) -> None:
+    roots = validate_locations(db_path, roots)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = db_path.with_name(f".{db_path.name}.building-{uuid.uuid4().hex}")
-    paths = scan_sources(source_roots)
+    paths = scan_sources(roots)
     started = time.perf_counter()
     con: sqlite3.Connection | None = None
     try:
         con = sqlite3.connect(temporary)
-        initialize_index(con, source_roots)
+        initialize_index(con, roots)
         with con:
             for item in extract_many(paths, workers):
                 insert_document(con, item)
@@ -519,31 +520,23 @@ def build_index(db_path: Path, source_roots: list[tuple[Path, str]], workers: in
             temporary.unlink()
 
 
-def update_index(db_path: Path, source_roots: list[tuple[Path, str]], workers: int) -> None:
-    source_roots = validate_locations(db_path, source_roots)
+def update_index(db_path: Path, roots: list[Path], workers: int) -> None:
+    roots = validate_locations(db_path, roots)
     con = open_index(db_path)
     con.row_factory = sqlite3.Row
     started = time.perf_counter()
-    paths = scan_sources(source_roots)
-    scanned = {canonical_path(Path(path)): (path, root, kind) for path, root, kind in paths}
-    root_kinds = {canonical_path(root): kind for root, kind in source_roots}
-    all_existing = list(
-        con.execute(
-            "SELECT doc_id,source_path,source_root,source_kind,size,mtime_ns FROM documents"
-        )
-    )
+    paths = scan_sources(roots)
+    scanned = {canonical_path(Path(path)): (path, root) for path, root in paths}
+    root_keys = {canonical_path(root) for root in roots}
     existing = {
         canonical_path(Path(row["source_path"])): row
-        for row in all_existing
-        if root_kinds.get(canonical_path(Path(row["source_root"]))) == row["source_kind"]
+        for row in con.execute(
+            "SELECT doc_id,source_path,source_root,size,mtime_ns FROM documents"
+        )
+        if canonical_path(Path(row["source_root"])) in root_keys
     }
-    removed = [
-        row
-        for row in all_existing
-        if root_kinds.get(canonical_path(Path(row["source_root"]))) != row["source_kind"]
-        or canonical_path(Path(row["source_path"])) not in scanned
-    ]
-    changed: list[tuple[str, str, str]] = []
+    removed = [row for key, row in existing.items() if key not in scanned]
+    changed: list[tuple[str, str]] = []
     added = 0
     replaced = 0
     for key, pair in scanned.items():
@@ -573,7 +566,7 @@ def update_index(db_path: Path, source_roots: list[tuple[Path, str]], workers: i
             con.execute(
                 "INSERT INTO meta(key,value) VALUES ('source_roots',?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-                (json.dumps([{"path": str(root), "kind": kind} for root, kind in source_roots], ensure_ascii=False),),
+                (json.dumps([str(root) for root in roots], ensure_ascii=False),),
             )
             con.execute(
                 "INSERT INTO meta(key,value) VALUES ('last_update_utc',?) "
@@ -800,14 +793,7 @@ def main() -> None:
     for command in ("build", "update"):
         subparser = sub.add_parser(command)
         subparser.add_argument("--db", required=True, type=Path)
-        subparser.add_argument(
-            "--paper-root", action="append", default=[], type=Path,
-            help="Authorized read-only root containing published papers/appendices",
-        )
-        subparser.add_argument(
-            "--process-root", action="append", default=[], type=Path,
-            help="Authorized read-only root containing reviewer/editor/response materials",
-        )
+        subparser.add_argument("--root", action="append", required=True, type=Path)
         subparser.add_argument(
             "--workers",
             type=positive_int,
@@ -836,15 +822,10 @@ def main() -> None:
 
     args = parser.parse_args()
     try:
-        if args.cmd in {"build", "update"}:
-            source_roots = [
-                *((path, "paper") for path in args.paper_root),
-                *((path, "process") for path in args.process_root),
-            ]
-            if args.cmd == "build":
-                build_index(args.db, source_roots, args.workers)
-            else:
-                update_index(args.db, source_roots, args.workers)
+        if args.cmd == "build":
+            build_index(args.db, args.root, args.workers)
+        elif args.cmd == "update":
+            update_index(args.db, args.root, args.workers)
         elif args.cmd == "search":
             search_index(
                 args.db,
