@@ -1,38 +1,39 @@
-MS/MKS Evidence-Grounded Modeling Skill - All Rights Reserved
+MS-MKS Modeling Skill Research Use License v1.0
 
-Copyright (c) 2026. All rights reserved.
+Copyright (c) 2026 the repository owner. All rights reserved except as expressly granted below.
 
-This repository and all of its contents (including but not limited to source
-code, scripts, documentation, specifications, design documents, and skill
-definition files) are the exclusive intellectual property of the copyright
-holder(s).
+1. Permitted use
 
-This repository is published in PUBLIC for reference and evaluation purposes
-ONLY. By accessing or viewing this repository, you may READ its contents, but
-you may NOT:
+Permission is granted, without fee, to download, clone, install, execute, and make local modifications to this repository and the software, prompts, reference material, and scripts it contains (the "Software") for:
 
-1. Copy, reproduce, duplicate, or extract any part of the contents, in whole
-   or in part, by any means, including but not limited to downloading, cloning,
-   scraping, or archiving.
-2. Redistribute, republish, upload, mirror, or otherwise make the contents
-   available to any third party, in original or modified form.
-3. Create derivative works, adaptations, translations, or modifications based
-   on the contents.
-4. Use the contents, or any part thereof, for any commercial purpose, or for
-   the development, training, or fine-tuning of any machine-learning model,
-   agent, or automated system.
-5. Remove, alter, or obscure any copyright, trademark, or other proprietary
-   notices contained in the contents.
+- personal research;
+- academic research and teaching;
+- educational use;
+- internal, non-public research and evaluation;
+- execution by AI coding or research agents on behalf of the above users.
 
-Any permitted use must retain the above copyright notice and this permission
-notice in all copies or substantial portions of the contents.
+2. Sharing and publication
 
-THE CONTENTS ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
-COPYRIGHT HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
-WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR
-IN CONNECTION WITH THE CONTENTS OR THE USE OR OTHER DEALINGS IN THE CONTENTS.
+You may link to the original public repository and may publish quotations or descriptions as permitted by applicable law. You may submit patches or pull requests to the original repository.
 
-Violation of this license may result in legal action under applicable
-copyright and intellectual property laws.
+Except with prior written permission from the copyright holder, this license does not grant permission to redistribute a modified or unmodified copy of the Software as a competing standalone package, sublicense it, sell it, or offer it as a paid hosted or bundled service.
+
+3. Model training
+
+This license does not grant permission to use the Software itself as a training corpus for training or fine-tuning a machine-learning model. This restriction does not prevent an AI agent from reading and executing the Skill at inference/runtime for a permitted use under Section 1.
+
+4. Attribution and notices
+
+Any permitted copy or local modification must retain this license notice and existing attribution notices.
+
+5. No endorsement
+
+Use of the Software does not imply endorsement by Management Science, Marketing Science, INFORMS, the authors of cited papers, or any other third party.
+
+6. Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR CORRECTNESS OF RESEARCH OUTPUT. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM THE SOFTWARE OR ITS USE.
+
+7. Other rights
+
+Rights not expressly granted are reserved. If you need commercial redistribution, sublicensing, hosted-service use, or other permissions, obtain separate written permission from the copyright holder.

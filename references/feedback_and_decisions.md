@@ -47,3 +47,15 @@ When a user imposes a constraint that conflicts with the strongest academic judg
 4. label resulting limitations and preserve a viable unconstrained alternative when material.
 
 Do not repeatedly argue after the user chooses a research constraint. Do not rewrite the evidence record to make the chosen branch look stronger.
+
+## Dependency and certificate impact
+
+For a consequential stakeholder proposal, do not evaluate only whether the suggestion sounds plausible. Map the proposed change to the current model dependencies:
+
+`proposal -> research object / primitive / timing / information / action / payoff / constraint / solution-concept change -> canonical model graph -> affected solution regimes / mechanism links -> affected derivations -> affected certificates/claims`.
+
+If a proposal changes the research object or the mechanism-defining architecture, evaluate it as a new model branch rather than a local patch. If it merely relaxes a high-leverage assumption, treat it as a targeted mechanism/robustness test and state which result it could invalidate.
+
+If the proposal changes a dependency of a previously scoped result, mark that result `STALE` until the affected checks are rerun. If the proposal is merely an exposition preference or non-load-bearing convention, do not invalidate formal results.
+
+When a stakeholder points to a source location (main text, appendix, proof, reviewer comment), inspect that location when authorized and material. Report separately: what the source/stakeholder says, what the model implies, and whether the proposal should be adopted.

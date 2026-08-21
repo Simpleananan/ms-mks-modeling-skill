@@ -21,6 +21,7 @@ credentials.*
 cache/
 __pycache__/
 *.py[cod]
+.pytest_cache/
 
 # Research-local state and private corpora
 .modeling/

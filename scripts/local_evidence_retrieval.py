@@ -20,6 +20,7 @@ import os
 from pathlib import Path
 import re
 import sqlite3
+import stat
 import subprocess
 import sys
 import time
@@ -27,7 +28,7 @@ import uuid
 import zipfile
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 SUPPORTED_SUFFIXES = {".pdf", ".docx"}
 CANONICAL_ROLES = {
     "MAIN_ARTICLE",
@@ -38,15 +39,9 @@ CANONICAL_ROLES = {
 }
 FILENAME_ROLE = {"A": "MAIN_ARTICLE", "F": "ONLINE_APPENDIX"}
 
-# Process-evidence roots are designated explicitly, never by a machine-specific
-# folder name. Set MKS_PROCESS_ROOT_NAMES (comma-separated, case-insensitive) to
-# auto-classify roots whose folder name matches. Empty by default so the public
-# release carries no private knowledge-base naming.
-PROCESS_EVIDENCE_ROOT_NAMES = {
-    name.strip().lower()
-    for name in os.environ.get("MKS_PROCESS_ROOT_NAMES", "").split(",")
-    if name.strip()
-}
+ROOT_ROLE_PAPER = "PAPER"
+ROOT_ROLE_PROCESS = "PROCESS"
+ROOT_ROLES = {ROOT_ROLE_PAPER, ROOT_ROLE_PROCESS}
 
 
 def configure_stdout() -> None:
@@ -71,21 +66,38 @@ def path_is_within(path: Path, directory: Path) -> bool:
         return False
 
 
-def validate_locations(db_path: Path, roots: list[Path]) -> list[Path]:
-    if not roots:
-        raise ValueError("At least one --root is required")
-    resolved: list[Path] = []
-    seen: set[str] = set()
-    for root in roots:
+def validate_locations(
+    db_path: Path, root_specs: list[tuple[Path, str]]
+) -> list[tuple[Path, str]]:
+    if not root_specs:
+        raise ValueError("At least one --paper-root or --process-root is required")
+    resolved: list[tuple[Path, str]] = []
+    seen: dict[str, str] = {}
+    for root, root_role in root_specs:
+        if root_role not in ROOT_ROLES:
+            raise ValueError(f"Unknown root role: {root_role}")
         real = root.resolve()
         if not real.is_dir():
             raise ValueError(f"Source root is not a directory: {real}")
         key = canonical_path(real)
-        if key not in seen:
-            seen.add(key)
-            resolved.append(real)
+        prior = seen.get(key)
+        if prior is not None and prior != root_role:
+            raise ValueError(
+                f"Source root cannot be both PAPER and PROCESS evidence: {real}"
+            )
+        if prior is None:
+            seen[key] = root_role
+            resolved.append((real, root_role))
+    for i, (root_a, role_a) in enumerate(resolved):
+        for root_b, role_b in resolved[i + 1 :]:
+            if path_is_within(root_a, root_b) or path_is_within(root_b, root_a):
+                raise ValueError(
+                    "Source roots must be disjoint to preserve unambiguous provenance: "
+                    f"{root_a} ({role_a}) overlaps {root_b} ({role_b})"
+                )
+
     db_real = db_path.resolve()
-    for root in resolved:
+    for root, _ in resolved:
         if path_is_within(db_real, root):
             raise ValueError(
                 f"Derived index must be outside source root: db={db_real} root={root}"
@@ -93,26 +105,59 @@ def validate_locations(db_path: Path, roots: list[Path]) -> list[Path]:
     return resolved
 
 
+def is_link_or_reparse(path: Path) -> bool:
+    """Return True for symlinks and Windows reparse-point/junction entries."""
+    try:
+        if path.is_symlink():
+            return True
+        info = os.lstat(path)
+    except OSError:
+        return False
+    flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    attrs = getattr(info, "st_file_attributes", 0)
+    return bool(flag and attrs & flag)
+
+
 def iter_source_files(root: Path):
+    root_real = root.resolve()
     for directory, dirnames, filenames in os.walk(root, followlinks=False):
         directory_path = Path(directory)
-        # Avoid following symlinked/junction-like children when Python reports them.
-        dirnames[:] = [
-            name
-            for name in dirnames
-            if not (directory_path / name).is_symlink()
-        ]
+        if not path_is_within(directory_path, root_real):
+            dirnames[:] = []
+            continue
+        kept_dirs = []
+        for name in dirnames:
+            child = directory_path / name
+            if is_link_or_reparse(child):
+                continue
+            if not path_is_within(child, root_real):
+                continue
+            kept_dirs.append(name)
+        dirnames[:] = kept_dirs
         for name in filenames:
             path = directory_path / name
-            if path.suffix.lower() in SUPPORTED_SUFFIXES and not path.is_symlink():
-                yield path
+            if path.suffix.lower() not in SUPPORTED_SUFFIXES:
+                continue
+            if is_link_or_reparse(path):
+                continue
+            if not path_is_within(path, root_real):
+                continue
+            yield path
 
 
-def scan_sources(roots: list[Path]) -> list[tuple[str, str]]:
-    found: dict[str, tuple[str, str]] = {}
-    for root in roots:
+def scan_sources(
+    root_specs: list[tuple[Path, str]]
+) -> list[tuple[str, str, str]]:
+    found: dict[str, tuple[str, str, str]] = {}
+    for root, root_role in root_specs:
         for path in iter_source_files(root):
-            found[canonical_path(path)] = (str(path.resolve()), str(root.resolve()))
+            key = canonical_path(path)
+            prior = found.get(key)
+            if prior and prior[2] != root_role:
+                raise ValueError(
+                    f"File discovered under conflicting evidence roles: {path}"
+                )
+            found[key] = (str(path.resolve()), str(root.resolve()), root_role)
     return [found[key] for key in sorted(found)]
 
 
@@ -128,8 +173,8 @@ def artifact_id_for(path: Path) -> str:
     return hashlib.sha1(canonical_path(path).encode("utf-8")).hexdigest()
 
 
-def classify_role(stem: str, root: Path, filename_role: str | None) -> str:
-    if root.name.lower() in PROCESS_EVIDENCE_ROOT_NAMES:
+def classify_role(stem: str, root_role: str, filename_role: str | None) -> str:
+    if root_role == ROOT_ROLE_PROCESS:
         return "PROCESS_EVIDENCE"
     lowered = stem.lower()
     corrective_terms = (
@@ -148,7 +193,7 @@ def classify_role(stem: str, root: Path, filename_role: str | None) -> str:
     return filename_role or "OTHER"
 
 
-def parse_source(path: Path, source_root: Path) -> dict:
+def parse_source(path: Path, source_root: Path, root_role: str) -> dict:
     stat = path.stat()
     rel = path.relative_to(source_root).as_posix()
     stem = path.stem
@@ -175,7 +220,7 @@ def parse_source(path: Path, source_root: Path) -> dict:
         year = "20" + canonical.group("yy")
         body = canonical.group("body").split("__", 1)[0]
         title = body.rsplit("_", 1)[-1].replace("- ", ": ").strip()
-    elif source_root.name.lower() in PROCESS_EVIDENCE_ROOT_NAMES:
+    elif root_role == ROOT_ROLE_PROCESS:
         if rel.startswith("ManagementScience/"):
             journal = "Management Science submission process"
         elif rel.startswith("MarketingScience/") or stem.startswith("MKSC-"):
@@ -193,11 +238,12 @@ def parse_source(path: Path, source_root: Path) -> dict:
         journal = "Management Science / Marketing Science local corpus"
         title = stem.split("__", 1)[0]
 
-    role = classify_role(stem, source_root, filename_role)
+    role = classify_role(stem, root_role, filename_role)
     return {
         "artifact_id": artifact_id_for(path),
         "source_path": str(path.resolve()),
         "source_root": str(source_root.resolve()),
+        "root_role": root_role,
         "source_rel": f"{source_root.name}/{rel}",
         "work_id": work_id,
         "role": role,
@@ -280,10 +326,10 @@ def guess_section(text: str, default: str) -> str:
     return normalize_space(match.group(0))[:120] if match else default
 
 
-def extract_one(args: tuple[str, str]) -> dict:
-    path_s, root_s = args
+def extract_one(args: tuple[str, str, str]) -> dict:
+    path_s, root_s, root_role = args
     path, root = Path(path_s), Path(root_s)
-    meta = parse_source(path, root)
+    meta = parse_source(path, root, root_role)
     try:
         meta["content_hash"] = file_sha256(path)
         units = pdf_pages(path) if path.suffix.lower() == ".pdf" else docx_blocks(path)
@@ -330,6 +376,7 @@ CREATE TABLE documents (
   artifact_id TEXT UNIQUE NOT NULL,
   source_path TEXT UNIQUE NOT NULL,
   source_root TEXT NOT NULL,
+  root_role TEXT NOT NULL,
   source_rel TEXT NOT NULL,
   work_id TEXT NOT NULL,
   role TEXT NOT NULL,
@@ -372,6 +419,7 @@ DOCUMENT_COLUMNS = (
     "artifact_id",
     "source_path",
     "source_root",
+    "root_role",
     "source_rel",
     "work_id",
     "role",
@@ -402,14 +450,39 @@ def open_index(db_path: Path) -> sqlite3.Connection:
     return con
 
 
-def initialize_index(con: sqlite3.Connection, roots: list[Path]) -> None:
+def serialize_root_specs(root_specs: list[tuple[Path, str]]) -> str:
+    return json.dumps(
+        [{"path": str(root), "role": role} for root, role in root_specs],
+        ensure_ascii=False,
+    )
+
+
+def stored_root_specs(db_path: Path) -> list[tuple[Path, str]]:
+    con = open_index(db_path)
+    row = con.execute("SELECT value FROM meta WHERE key='source_roots'").fetchone()
+    con.close()
+    if not row:
+        raise ValueError("Index has no stored source-root configuration; run build")
+    try:
+        raw = json.loads(row[0])
+        specs = [(Path(item["path"]), item["role"]) for item in raw]
+    except (TypeError, KeyError, json.JSONDecodeError) as exc:
+        raise ValueError("Index source-root configuration is invalid; rebuild the index") from exc
+    if not specs:
+        raise ValueError("Index has an empty source-root configuration; rebuild the index")
+    return specs
+
+
+def initialize_index(
+    con: sqlite3.Connection, root_specs: list[tuple[Path, str]]
+) -> None:
     con.executescript(SCHEMA)
     con.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
     con.executemany(
         "INSERT INTO meta(key,value) VALUES (?,?)",
         [
             ("schema_version", str(SCHEMA_VERSION)),
-            ("source_roots", json.dumps([str(root) for root in roots], ensure_ascii=False)),
+            ("source_roots", serialize_root_specs(root_specs)),
             ("created_utc", str(int(time.time()))),
             ("last_update_utc", str(int(time.time()))),
         ],
@@ -468,7 +541,7 @@ def insert_document(con: sqlite3.Connection, item: dict) -> None:
         )
 
 
-def extract_many(paths: list[tuple[str, str]], workers: int):
+def extract_many(paths: list[tuple[str, str, str]], workers: int):
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
         yield from pool.map(extract_one, paths)
 
@@ -484,16 +557,18 @@ def index_summary(con: sqlite3.Connection, db_path: Path) -> dict:
     }
 
 
-def build_index(db_path: Path, roots: list[Path], workers: int) -> None:
-    roots = validate_locations(db_path, roots)
+def build_index(
+    db_path: Path, root_specs: list[tuple[Path, str]], workers: int
+) -> None:
+    root_specs = validate_locations(db_path, root_specs)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     temporary = db_path.with_name(f".{db_path.name}.building-{uuid.uuid4().hex}")
-    paths = scan_sources(roots)
+    paths = scan_sources(root_specs)
     started = time.perf_counter()
     con: sqlite3.Connection | None = None
     try:
         con = sqlite3.connect(temporary)
-        initialize_index(con, roots)
+        initialize_index(con, root_specs)
         with con:
             for item in extract_many(paths, workers):
                 insert_document(con, item)
@@ -520,35 +595,59 @@ def build_index(db_path: Path, roots: list[Path], workers: int) -> None:
             temporary.unlink()
 
 
-def update_index(db_path: Path, roots: list[Path], workers: int) -> None:
-    roots = validate_locations(db_path, roots)
+def update_index(
+    db_path: Path,
+    root_specs: list[tuple[Path, str]],
+    workers: int,
+    verify_hash: bool = False,
+) -> None:
+    root_specs = validate_locations(db_path, root_specs)
     con = open_index(db_path)
     con.row_factory = sqlite3.Row
     started = time.perf_counter()
-    paths = scan_sources(roots)
-    scanned = {canonical_path(Path(path)): (path, root) for path, root in paths}
-    root_keys = {canonical_path(root) for root in roots}
+    paths = scan_sources(root_specs)
+    scanned = {
+        canonical_path(Path(path)): (path, root, root_role)
+        for path, root, root_role in paths
+    }
     existing = {
         canonical_path(Path(row["source_path"])): row
         for row in con.execute(
-            "SELECT doc_id,source_path,source_root,size,mtime_ns FROM documents"
+            "SELECT doc_id,source_path,source_root,root_role,size,mtime_ns,content_hash "
+            "FROM documents"
         )
-        if canonical_path(Path(row["source_root"])) in root_keys
     }
     removed = [row for key, row in existing.items() if key not in scanned]
-    changed: list[tuple[str, str]] = []
+    changed: list[tuple[str, str, str]] = []
     added = 0
     replaced = 0
-    for key, pair in scanned.items():
-        path = Path(pair[0])
-        stat = path.stat()
+    verified_hashes = 0
+    hash_mismatches = 0
+    for key, triple in scanned.items():
+        path = Path(triple[0])
+        root_role = triple[2]
+        info = path.stat()
         row = existing.get(key)
         if row is None:
-            changed.append(pair)
+            changed.append(triple)
             added += 1
-        elif row["size"] != stat.st_size or row["mtime_ns"] != stat.st_mtime_ns:
-            changed.append(pair)
+            continue
+        metadata_changed = (
+            row["size"] != info.st_size
+            or row["mtime_ns"] != info.st_mtime_ns
+            or row["root_role"] != root_role
+        )
+        if metadata_changed:
+            changed.append(triple)
             replaced += 1
+            continue
+        if verify_hash:
+            verified_hashes += 1
+            current_hash = file_sha256(path)
+            if current_hash != row["content_hash"]:
+                hash_mismatches += 1
+                changed.append(triple)
+                replaced += 1
 
     extracted = list(extract_many(changed, workers))
     try:
@@ -566,7 +665,7 @@ def update_index(db_path: Path, roots: list[Path], workers: int) -> None:
             con.execute(
                 "INSERT INTO meta(key,value) VALUES ('source_roots',?) "
                 "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
-                (json.dumps([str(root) for root in roots], ensure_ascii=False),),
+                (serialize_root_specs(root_specs),),
             )
             con.execute(
                 "INSERT INTO meta(key,value) VALUES ('last_update_utc',?) "
@@ -585,6 +684,9 @@ def update_index(db_path: Path, roots: list[Path], workers: int) -> None:
                 "replaced": replaced,
                 "removed": len(removed),
                 "unchanged": len(paths) - added - replaced,
+                "verify_hash": verify_hash,
+                "verified_hashes": verified_hashes,
+                "hash_mismatches": hash_mismatches,
                 "elapsed_s": round(time.perf_counter() - started, 2),
             }
         )
@@ -602,6 +704,11 @@ def build_search_sql(roles: list[str], journal: str | None) -> tuple[str, list[o
             raise ValueError(f"Unknown evidence role(s): {', '.join(invalid)}")
         clauses.append("d.role IN (" + ",".join("?" for _ in roles) + ")")
         parameters.extend(roles)
+    else:
+        # Enforce the process-evidence firewall at retrieval time: ordinary paper
+        # searches exclude reviewer/editor/response material unless explicitly requested.
+        clauses.append("d.role <> ?")
+        parameters.append("PROCESS_EVIDENCE")
     if journal:
         clauses.append("d.journal LIKE ?")
         parameters.append(f"%{journal}%")
@@ -625,7 +732,7 @@ def search_index(
     sql = f"""
       SELECT c.chunk_id,
              bm25(chunks_fts, 1.0, 2.0, 1.2, 0.3, 0.3) AS lexical_score,
-             d.artifact_id, d.content_hash, d.work_id, d.role, d.title,
+             d.artifact_id, d.content_hash, d.work_id, d.role, d.root_role, d.title,
              d.authors, d.year, d.journal, d.doi, d.source_path, d.source_rel,
              c.page, c.section, c.chunk_index, c.char_start, c.char_end, c.text
       FROM chunks_fts
@@ -669,6 +776,7 @@ def search_index(
         artifact = {
             "artifact_id": row["artifact_id"],
             "role": row["role"],
+            "root_role": row["root_role"],
             "source_path": row["source_path"],
             "source_rel": row["source_rel"],
             "content_hash": row["content_hash"],
@@ -731,7 +839,7 @@ def inspect_index(
             con.close()
             raise ValueError(f"Unknown chunk_id: {chunk_id}")
         rows = con.execute(
-            """SELECT c.chunk_id,d.work_id,d.artifact_id,d.role,d.title,d.authors,
+            """SELECT c.chunk_id,d.work_id,d.artifact_id,d.role,d.root_role,d.title,d.authors,
                       d.year,d.journal,d.doi,d.source_path,d.source_rel,c.page,
                       c.section,c.chunk_index,c.char_start,c.char_end,c.text
                FROM chunks c JOIN documents d ON d.doc_id=c.doc_id
@@ -745,7 +853,7 @@ def inspect_index(
         )
     else:
         rows = con.execute(
-            """SELECT c.chunk_id,d.work_id,d.artifact_id,d.role,d.title,d.authors,
+            """SELECT c.chunk_id,d.work_id,d.artifact_id,d.role,d.root_role,d.title,d.authors,
                       d.year,d.journal,d.doi,d.source_path,d.source_rel,c.page,
                       c.section,c.chunk_index,c.char_start,c.char_end,c.text
                FROM chunks c JOIN documents d ON d.doc_id=c.doc_id
@@ -783,6 +891,26 @@ def positive_int(value: str) -> int:
     return parsed
 
 
+def root_specs_from_args(
+    args: argparse.Namespace, *, reuse_stored_for_update: bool = False
+) -> list[tuple[Path, str]]:
+    paper_roots = [*args.paper_root, *args.root]
+    if args.root:
+        print(
+            "warning: --root is deprecated; use --paper-root",
+            file=sys.stderr,
+        )
+    explicit = [
+        *((path, ROOT_ROLE_PAPER) for path in paper_roots),
+        *((path, ROOT_ROLE_PROCESS) for path in args.process_root),
+    ]
+    if explicit:
+        return explicit
+    if reuse_stored_for_update:
+        return stored_root_specs(args.db)
+    return []
+
+
 def main() -> None:
     configure_stdout()
     parser = argparse.ArgumentParser(
@@ -793,12 +921,28 @@ def main() -> None:
     for command in ("build", "update"):
         subparser = sub.add_parser(command)
         subparser.add_argument("--db", required=True, type=Path)
-        subparser.add_argument("--root", action="append", required=True, type=Path)
+        subparser.add_argument(
+            "--paper-root", action="append", default=[], type=Path,
+            help="published/formal evidence root; repeat as needed; on update, any supplied roots replace the stored root configuration",
+        )
+        subparser.add_argument(
+            "--process-root", action="append", default=[], type=Path,
+            help="review/editor/author-response process-evidence root; repeat as needed; on update, any supplied roots replace the stored root configuration",
+        )
+        subparser.add_argument(
+            "--root", action="append", default=[], type=Path,
+            help="deprecated alias for --paper-root",
+        )
         subparser.add_argument(
             "--workers",
             type=positive_int,
             default=max(2, min(8, os.cpu_count() or 2)),
         )
+        if command == "update":
+            subparser.add_argument(
+                "--verify-hash", action="store_true",
+                help="hash otherwise unchanged files to detect timestamp-preserving replacements",
+            )
 
     search = sub.add_parser("search")
     search.add_argument("--db", required=True, type=Path)
@@ -823,9 +967,14 @@ def main() -> None:
     args = parser.parse_args()
     try:
         if args.cmd == "build":
-            build_index(args.db, args.root, args.workers)
+            build_index(args.db, root_specs_from_args(args), args.workers)
         elif args.cmd == "update":
-            update_index(args.db, args.root, args.workers)
+            update_index(
+                args.db,
+                root_specs_from_args(args, reuse_stored_for_update=True),
+                args.workers,
+                verify_hash=args.verify_hash,
+            )
         elif args.cmd == "search":
             search_index(
                 args.db,

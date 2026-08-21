@@ -29,7 +29,7 @@ Do not force both sides when the issue is settled or the contrast is irrelevant,
 - **D3 — formal main text plus relevant appendix/proof**: can support exact formal dependencies, proof conditions, equilibrium construction, robustness, or omitted cases that were actually inspected.
 - **D4 — triangulated evidence**: D2/D3 evidence is checked against linked appendix, correction/comment/rejoinder, revision history, data/code, or a contrastive formal paper. D4 increases auditability, not automatic truth.
 
-Never reconstruct D2/D3 details from D0/D1. If full text is unavailable, downgrade the claim and confidence.
+Never reconstruct D2/D3 details from D0/D1. If full text is unavailable, downgrade the claim and confidence. Source authority establishes what a paper, reviewer, editor, or author claimed; it does not by itself establish formal truth. For formal validity, combine source reconstruction with the activated mathematical/equilibrium checks in `modeling_and_validation.md`.
 
 ## Source priority and scope
 
@@ -41,9 +41,34 @@ Never reconstruct D2/D3 details from D0/D1. If full text is unavailable, downgra
 
 This is a priority rule, not an exclusion rule. “No counterexample found” never means no counterexample exists.
 
+For public MS/MKS calibration, use `ms_mks_calibration.md` only as an exemplar layer. It records structures directly supported by public official pages and separates them from stronger appendix/proof details that still require D3/D4 inspection. One structurally relevant paper supports an exemplar claim; repeated nearby evidence is required before describing a practice as a journal/field norm.
+
 Use a single paper as a precedent only for the inspected structural move and its scope. Describe a practice as a field norm only after repeated, structurally relevant evidence; otherwise attribute it to the paper. Absence of a direct precedent is not a veto on a model. A new linkage can be a valid candidate when its component primitives have defensible institutional or theoretical foundations and the resulting strategies, equilibrium, and claims are established by the new analysis. In that case, literature supports the components and boundaries—not the untested linkage itself.
 
 Do not let retrieval define the candidate space before the research problem is understood. For a phenomenon-led task, first form provisional structural hypotheses, then use literature to challenge, refine, or screen them. Retrieve earlier when the task is paper-led, when a modeling convention is needed to make the game coherent, or when collision risk is already decision-relevant.
+
+
+## Evidence roles for model architecture and mechanism
+
+Use literature and institutional sources for distinct jobs; do not let precedent substitute for the current model's logic.
+
+- **Institution-mapping evidence:** verify decision-relevant facts about observability, control rights, timing, participation, contracting, market structure, or operational constraints when the model makes application-specific claims. A deliberate stylization can differ from reality; the issue is whether the paper presents the abstraction honestly and whether the difference changes the research object or mechanism.
+- **Implementation evidence:** when supplied code, algorithms, or computational appendices carry a result, treat them as a separate implementation layer to compare with the canonical formal model. Matching code output is not proof if the implemented objective, constraints, parameter domain, or selection rule differs from the stated model.
+
+
+When literature is used to improve the model rather than merely cite it, distinguish what the evidence is doing. Relevant MS/MKS papers can calibrate at least five different objects:
+
+1. **Institutional precedent** — whether a comparable real setting has been abstracted with similar actors, control rights, timing, or market structure.
+2. **Primitive precedent** — whether a signal structure, participation choice, competition form, disclosure commitment, matching technology, or other primitive has a defensible formal representation.
+3. **Mechanism precedent** — whether the same strategic feedback or causal decomposition already appears in nearby work, which matters for both interpretation and novelty collision.
+4. **Solution/equilibrium convention** — how structurally close models define beliefs, timing, strategy spaces, equilibrium/refinement, or computational solution objects. This is calibration, not permission to copy a convention that conflicts with the current institution.
+5. **Novelty collision** — whether recent work already studies the same research object and strategic mechanism, even if titles or application labels differ.
+
+Use evidence to test the model's architecture, not to outsource formal truth. A published precedent cannot prove that the current feasible set is nonempty, that an equilibrium exists, or that a mechanism attribution is correct in the new model.
+
+For mechanism-oriented retrieval, derive queries from the canonical model graph and the proposed endogenous link, not only from topic labels. A query such as `disclosure -> seller inference -> price competition -> platform payoff` is often more diagnostic than a broad topical search for “platform disclosure.”
+
+When using literature to justify a robustness or extension, tie it to a load-bearing assumption or institutional uncertainty. Do not add a literature-backed extension merely because it is common or available.
 
 ## Exemplar retrieval and novelty screening
 
