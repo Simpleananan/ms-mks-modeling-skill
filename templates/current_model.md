@@ -1,69 +1,41 @@
 # Current Model
 
-Use only for cross-session work. Keep this file compact and replace stale state rather than accumulating conversation history.
+Use only for genuinely cross-session work. Replace stale state; do not copy conversation history.
 
-## Research object and institutional question
+## Research object and intended claim
 
-State the phenomenon/strategic tension the model is meant to explain, not only the paper title or proposition.
+## Institution and purposeful abstractions
 
-## Institution-to-model mapping
+## Applicable formal objects
 
-When application-specific claims are material, record the mapping for observability, control rights, timing, participation, constraints, and market structure. Mark deliberate stylizations separately from unresolved factual mismatches.
+Record only the objects activated by this model. For a game: players, timing/commitment, information/beliefs, actions/domains, payoffs, deviations, and equilibrium. For another analytical form: primitives, states, controls, objective, constraints, transition law, commitment, and solution concept as applicable.
 
-## Material map
+## Mechanism or other contribution object
 
-For source-based work, list only model-bearing locations needed to keep the global structure visible: baseline/model setup, main propositions, proof appendix, relevant extensions/robustness, welfare/numerical sections, and code when material.
+`primitive/assumption -> response/belief -> equilibrium object -> result`
 
-## Canonical model map
+## Claims, tested domains, and support status
 
-### Players, timing, commitment
+Distinguish conjectured, derived, numerically observed, formally verified, and literature-supported statements when material.
 
-### Information, beliefs, observability/verifiability
+## Decisive open tests
 
-### Actions and feasible strategy domains
+Record only uncertainties capable of changing the model or claim.
 
-### Payoffs, constraints, identities, outside options
+## Literature snapshot for collision or absence claims
 
-### Solution/equilibrium concept and selection rule
+When such a claim is live, record the coverage and ranking fingerprints, search date, English/other query branches, retrieval arms/depth, public-web boundary, benchmark or recall limitation, and unresolved near neighbors. Mark it `COVERAGE_STALE` if roots or the eligible paper set changes and `RANKING_STALE` if searchable metadata, retrieval configuration, schema, or model changes.
 
-Record cross-material differences here instead of silently maintaining parallel versions of the same object.
+## Live alternatives
 
-## Source / author path and provenance anchors
+Keep structurally distinct branches only.
 
-Use labels when material: `EXPLICIT_SOURCE`, `DERIVED`, `IMPLICIT_NECESSARY`, `CONVENTIONAL`, `ANALYST_ADDED`, `UNKNOWN`.
+## Retired-branch guards
 
-## Constraint inventory
+For each material rejected branch, retain one line: rejection reason and evidence/condition that would justify reopening it.
 
-## Independent solution-space / regime map
+## Stale dependencies
 
-Record materially distinct feasible/equilibrium branches, corners, participation regimes, nonexistence regions, multiplicity, and thresholds. Do not store only the author's named candidate.
+Mark affected claims stale after a depended-on primitive, timing/information rule, action domain, payoff/constraint, solution concept, or mechanism assumption changes.
 
-## Assumption-leverage map
-
-For load-bearing assumptions: role, conclusion load, affected result/mechanism, and the cheapest meaningful removal/relaxation test.
-
-## Mechanism map and falsification status
-
-`primitive/assumption -> belief/response -> equilibrium object -> result`
-
-Record any benchmark isolation, freeze/shutdown, smaller-model, or alternative-mechanism test that materially changes interpretation.
-
-## Cross-material / implementation / cross-claim consistency
-
-Timing, information, domain, constraint, equilibrium-concept, benchmark, welfare, narrative-scope, or supplied code/numerical-implementation mismatches that could change a conclusion.
-
-## Claims and tested domains
-
-## Solution certificates
-
-For each important certificate record: status and scope; decisive dependencies; source treatment if relevant; activated boundary/equilibrium checks; unresolved exclusions; invalidation conditions.
-
-## Validation status and invalidations
-
-Mark affected results `STALE` after changes to any depended-on research object, primitive, timing/information condition, action domain, payoff/constraint, solution concept, or mechanism-defining assumption.
-
-## Open issues and decisive next tests
-
-## Retired branches
-
-Keep only a one-line reason and the condition that would justify reopening each branch.
+For literature evidence, record the specific dependency: `SOURCE_STALE` for changed supporting artifact/locator; `BIBLIOGRAPHY_STALE` for changed verified identity-display fields or provenance; `COVERAGE_STALE` for absence/collision coverage; `RANKING_STALE` for saved candidate order/cutoff. Do not invalidate a positive claim about one unchanged paper merely because another paper was added.

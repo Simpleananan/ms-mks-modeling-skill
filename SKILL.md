@@ -1,115 +1,126 @@
 ---
 name: ms-mks-modeling
-description: Use for Management Science or Marketing Science analytical/game-theoretic research: orienting vague ideas or institutions; reconstructing target papers and appendices; building, solving, diagnosing, repairing, and comparing models; auditing constraints, feasible domains, boundary/threshold cases, equilibria, mechanisms, claims, and welfare; screening literature neighbors and contribution; and evaluating advisor/reviewer/editor modeling feedback. For broad model/paper audits, map the research model and discover omitted regimes or cross-material inconsistencies before certifying source-stated propositions. Preserve source/formal/claim distinctions, scope conclusions narrowly, and do not promise novelty, publication readiness, or universal theorem proving.
+description: >-
+  Use for Management Science and Marketing Science analytical or game-theoretic
+  research: orienting ideas, reconstructing papers, designing and solving models,
+  diagnosing mechanisms, repairing structural problems, comparing candidates,
+  and using local or web literature evidence. Keep formal, source, and claim
+  boundaries explicit; do not use for pure empirical analysis or promise novelty,
+  publication readiness, or universal theorem proving.
 license: LICENSE
-compatibility: Python 3.10+ for bundled local-retrieval scripts; pdftotext is required only for PDF indexing. Local corpus and web access remain optional and subject to host permissions.
 metadata:
-  version: "0.5.0-rc3"
+  version: "0.9.4-rc1"
 ---
 
-# MS/MKS Evidence-Grounded Modeling
+# MS/MKS evidence-grounded modeling
 
-Treat the **research model**, not an individual proposition, as the central object. Improve it through a traceable chain:
+Help the user advance the research question, not merely criticize the current equations.
+Trace every important conclusion through:
 
-`research object -> institution/primitives -> timing/information/actions -> feasible set/payoffs -> equilibrium/solution space -> mechanism -> claim/welfare/domain`.
+`research object -> institution -> applicable formal objects -> endogenous response -> solution/equilibrium -> mechanism or contribution object -> claim/welfare/domain`.
 
-Three governing principles apply conditionally by task scope:
+“Applicable formal objects” are task-dependent. For a game they may include players, timing, information, actions, payoffs, beliefs, and equilibrium; for optimization, dynamic decision, information-design, or adjacent analytical work they may instead include primitives, states, controls, objective, constraints, transition law, commitment, and solution concept. Never force every paper into one Model Card.
 
-- **Design before solve** — first ask whether the formalization carries the research question and uses no more structure than needed.
-- **Discover before certify** — for broad model/paper audits, map the model and search for material inconsistencies or omitted regimes before locking onto the source's stated propositions.
-- **Explain mechanism before claim** — distinguish a mathematically correct result from the strategic force that actually produces it.
+Prompt completeness changes routing, not research quality. Use facts already supplied. Do not show a mode menu or ask the user to formalize a full game before helping.
 
-For consequential formal conclusions, retain **closure before conclusion**: do not certify a claim until the relevant source/model specification, constraints, admissible domain, cases, candidate solution, equilibrium branches, and claim scope are sufficiently closed. These principles strengthen the full research workflow; they do not replace orientation, literature recomposition, candidate exploration, convergence, repair, or explanation.
+## Route the task
 
-Let prompt completeness change routing, never research quality. Use supplied facts without asking for them again.
+Infer both the starting state and the user's objective.
 
-## P0: route task scope and starting state
+- For a detailed or partial model, reconstruct only the dependencies needed to build, solve, audit, repair, or revise it.
+- For a target paper, recover the paper's model and claim boundary before proposing changes.
+- For a phenomenon, institution, question, vague direction, or unsure user, orient the problem before committing to a game.
+- For advisor, reviewer, senior, or user proposals, evaluate the proposal independently; authority and repetition do not increase epistemic support.
+- For a fully specified algebraic or calculus check, calculate directly. Do not retrieve literature unless interpretation or precedent is also requested.
 
-Infer the state silently; never show a mode menu.
+Classify missing information as:
 
-- Route a detailed existing model or partial model to reconstruction and the requested build, audit, solution, or repair.
-- Route a target paper to paper reconstruction before proposing modifications.
-- Route a research question, phenomenon, institution, case, vague topic, or unsure user to orientation and exploratory modeling.
-- Route advisor, senior, reviewer, or editor feedback to independent proposal evaluation.
+- **source-resolvable**: recover it from supplied or authorized sources;
+- **nonblocking**: continue and mark the boundary;
+- **blocking**: ask once, in a batch, only when the answer changes the research object, game, timing, information, feasible actions, equilibrium concept, or contribution direction.
 
-Also classify **audit scope**:
+## Load references only when needed
 
-- **LOCAL** — a specific equation, derivation step, proposition, parameter region, or clearly bounded question. Audit that object and its material dependencies; do not force a whole-paper census.
-- **MODEL/PAPER-WIDE** — requests such as “overall check,” “is this model sound/complete,” “what did the paper miss,” baseline freeze, major redesign, or contribution/mechanism evaluation. Before proposition-focused deep work, run a breadth-first model/material census and cross-material integrity scan.
+- Read [research_design.md](references/research_design.md) for orientation, target-paper reconstruction, model construction, candidate comparison, solution explanation, repair, convergence, or model-facing writing.
+- Read [formal_validation.md](references/formal_validation.md) for proposition/model audits, equilibrium certification, boundary cases, mechanism validation, welfare checks, or computational claims.
+- Read [evidence_policy.md](references/evidence_policy.md) when literature, institutional facts, modeling norms, novelty, or process materials can change the answer.
+- Read [feedback_and_decisions.md](references/feedback_and_decisions.md) for consequential stakeholder feedback or a blocking formalization choice.
+- Before local retrieval, read [retrieval_contract.md](references/retrieval_contract.md).
 
-Classify missing information as **source-resolvable**, **nonblocking**, or **blocking**. Recover source-resolvable facts from supplied materials or authorized sources. Defer nonblocking gaps. Ask once, in a batch, only when unresolved alternatives change the research object, formal game, timing, information, actions, equilibrium concept, or major contribution direction and evidence does not favor one.
+Do not load the formal-audit reference for ordinary orientation or a narrow calculation unless the emerging claim activates it.
 
-For orientation or exploratory modeling, identify the institution, actors, strategic tension, and uncertainty/information/control rights. Generate alternative research questions or formalizations only when a live, decision-relevant branch could change the research object, mechanism, timing/information/actions, equilibrium, contribution, institutional interpretation, or tractability. Otherwise advance the single coherent path. Retrieve structurally relevant evidence when it can separate live branches. Read [modeling_and_validation.md](references/modeling_and_validation.md) for orientation, model architecture, global integrity, independent solution-space discovery, mechanism identification, candidate comparison, solution logic, and certification.
+## Work in separated passes
 
-## Run conditional passes
+Use only the passes that the task needs. Keep construction and challenge distinct.
 
-Do not force every pass into every task.
+1. **Understand:** identify the research object, institution, applicable formal objects, intended claim, and current bottleneck at the depth needed by the task.
+2. **Retrieve when decision-relevant:** search only when evidence can change a formalization, candidate, precedent, institutional mapping, mechanism interpretation, claim boundary, contribution judgment, or confidence.
+3. **Build, solve, or diagnose:** construct or reconstruct the model, derive the relevant response/equilibrium dependency, and state what currently blocks progress.
+4. **Challenge:** test the strongest material alternative: a load-bearing assumption, omitted deviation/regime, mechanism attribution, cross-material claim-scope mismatch, or evidence that could reverse the recommendation. Publication is not immunity from error, but surprise, complexity, or a strong assumption is not evidence of error. Reconstruct the applicable domain and obtain a contradiction, counterexample, violated condition, or source inconsistency before escalating criticism.
+5. **Decide and advance:** select, conditionally select, narrow, repair, redesign, freeze, or return `INCONCLUSIVE`; then perform or specify the smallest next action with decision value.
 
-1. **P1 Research Object / Reconstruct** — orient sparse input or reconstruct the target model. Identify the research object, institution, strategic tension, canonical primitives, timing, information, actions, payoffs/constraints, solution concept, and intended mechanism. When the paper or user makes institution-specific claims, distinguish deliberate stylization from a factual mismatch in observability, control rights, timing, participation, or feasibility; retrieve evidence only when that mapping is decision-relevant. For source-based work, distinguish `EXPLICIT_SOURCE`, `DERIVED`, `IMPLICIT_NECESSARY`, `CONVENTIONAL`, `ANALYST_ADDED`, and `UNKNOWN`.
-2. **P2 Retrieve** — run only when evidence can change a formalization, precedent, claim boundary, verdict, uncertainty, candidate comparison, mechanism interpretation, or contribution judgment. Read [evidence_policy.md](references/evidence_policy.md); before local retrieval also read [retrieval_contract.md](references/retrieval_contract.md).
-3. **P3 Model Architecture / Build** — construct or evaluate the minimum model needed for the research question. Ask what each load-bearing assumption does, whether literature streams create an actual endogenous interaction, whether a smaller baseline carries the same mechanism, and whether a preferred result is being engineered by assumption. Preserve non-equivalent branches when they define different games.
-4. **P4 Integrity / Independent Discovery** — for MODEL/PAPER-WIDE audits, first create a breadth-first material/model census and canonical model map; compare repeated definitions of timing, information, domains, constraints, solution concepts, baselines, claim scopes, and—when supplied or material—numerical/code implementation across main text, appendices, extensions, figures, computational routines, and other model-bearing material. Then characterize the materially distinct feasible/equilibrium regimes from the canonical model **before using the source's final formula or qualitative sign as the target**. For LOCAL tasks, perform only the integrity/discovery checks needed by the scoped object.
-5. **P5 Mechanism Identification / Falsification** — identify which assumptions and endogenous responses carry the result. When decision-relevant, use assumption-leverage mapping, coherent mechanism shutdown/neutralization or clearly labeled diagnostic freezes, benchmark isolation, negative-space reasoning about the benchmark that would remove the claimed force, and a minimal-model challenge. The absence of a useful benchmark is a diagnosis of mechanism identification, not an automatic model failure. Do not demand a complex feedback loop when the contribution is intentionally a boundary, formal solution, institution, or direct effect; do not label an effect “mechanism-driven” when the result is effectively written into an assumption.
-6. **P6 Claim Certification / Evidence Critic** — for source-based validation use two tracks: faithfully reconstruct the source path and independently derive/characterize the relevant result from the canonical model. If they disagree, locate the earliest material divergence. Before `PASS`, `UNIQUE`, `GLOBAL`, or existence claims, activate source/constraint/domain/feasible-set/case/candidate/equilibrium/claim closure checks, including boundary and threshold cases when triggered. Make one targeted attempt to falsify a load-bearing node. A separate adversarial critic pass may be skipped for a fully decidable local calculation, but no certification obligation activated by the conclusion may be skipped.
-7. **P7 Research Judgment / Synthesize** — compare live candidates; distinguish object, mechanism, and result deltas; assess institutional fit, assumption load, tractability, nearest-neighbor collision, and whether the result survives a smaller or mechanism-disabled benchmark. Freeze the baseline when it already carries the research question, is sufficiently closed to solve, has an identifiable mechanism or clearly stated non-mechanism contribution, and no unresolved structural veto could plausibly overturn it. Repair, narrow, redesign, or extend only when the causal diagnosis justifies doing so.
+For a broad model or paper audit, map the model-bearing materials and canonical game before certifying named propositions. For a local equation, derivation, or proposition, keep the audit local unless a dependency can overturn it.
 
-For consequential stakeholder proposals, read [feedback_and_decisions.md](references/feedback_and_decisions.md). Treat authority, repetition, user approval, and reflexive opposition as irrelevant to epistemic confidence. Follow explicit research constraints without presenting them as academic support.
+Do not infer a formal omission from one section's silence. Before an absence-based `FAIL`, search the supplied model-bearing locations that could resolve the object. Distinguish a true formal absence from an assumption or restriction that is formally present elsewhere but poorly introduced or cross-referenced; leave the issue unresolved when relevant supplied materials remain unchecked.
 
-## Evidence and MS/MKS calibration
+## Independent research judgment
 
-For target-paper formal details, inspect the supplied/local main article and relevant appendix/proof. For MODEL/PAPER-WIDE audits, first identify the material map so claim-driven deep reading does not become proposition anchoring. Search wider literature only when comparison, ambiguity, precedent, institutional mapping, mechanism interpretation, robustness, or contribution creates a live evidence need.
+A proposal is not a commitment, and an adopted choice is not evidence for itself. Evaluate a consequential choice by its model-specific role, structural consequences, and basis. Accept supported abstractions; challenge load-bearing mismatches; verify first when a derivation or source can decide the issue.
 
-When making an MS/MKS-specific precedent or modeling-norm claim, consult [ms_mks_calibration.md](references/ms_mks_calibration.md) as a public calibration layer and verify stronger formal/journal-norm claims against multiple structurally relevant papers—preferably the authorized local corpus at D3/D4 depth. Use MS/MKS literature to calibrate institutional abstraction, primitives, strategic mechanism precedents, solution conventions, and novelty collision; never use precedent as a substitute for proving the current model's mathematics. One paper is an exemplar, not a universal norm.
+After finding a substantive problem, continue the research loop: locate the failed causal link, distinguish a false intuition from a missing institutional force, construct only causally distinct repairs or redesigns, test their cheapest decisive implications, and re-solve affected dependencies. Allow the conclusion that the original intuition is unsupported. Never add structure merely to manufacture a preferred sign or story.
 
-Skip retrieval for fully specified algebra, derivatives, concavity, equilibrium substitution, deterministic computation, or contradictions decidable from the supplied model. Use Python or SymPy for the specific check when useful. Prefer `analytical/symbolic reduction -> regime partition -> targeted computation -> counterexample search` over brute-force parameter sweeps.
+## Retrieval and evidence
 
-## Maintain only useful state
+Use local authorized papers and appendices first. Use web fallback when missing public evidence, a correction, publication status, institutional fact, or wider nearest-neighbor set could change the decision. Local-first is not local-only.
 
-Track in readable Markdown when needed: Research object; Institution and institution-to-model mapping; Players; Timing; Information; Actions; Payoffs/Constraints; Solution concept; Canonical model map; Material map; Claims; Mechanisms; Open issues; Alternative branches. For long formal work also track a Constraint Inventory, Regime/Boundary Map, Derivation Provenance, Assumption-Leverage Map, Cross-Material/Implementation Consistency Notes, and scoped Solution Certificates when these materially prevent context drift.
+Enforce four boundaries: paper/artifact/version identity must resolve; generated summaries never become evidence; novelty cannot rest on one Top-K list; manuscript citations require separate identity, claim-support, and format checks. Keep deterministic identity, synchronization, retrieval, and audit mechanics in the bundled script. Let the current research decision determine queries, retrieval arms, candidate depth, structural comparison dimensions, and which source sections need inspection.
 
-Create `.modeling/current_model.md` only for genuinely cross-session work. Keep only current state, decisive unresolved tests, and short retired-branch guards. Mark a result `STALE` whenever a depended-on primitive, timing/information condition, action domain, payoff/constraint, solution concept, or mechanism-defining assumption changes. Saved narrative is convenience, not authority over the formal model.
+Use paper-level retrieval as the default candidate route, then locate passages inside selected papers. Use exact lookup for known DOI/title. For a clear English concept, begin with one coherent conjunctive lexical branch. When the user asks in Chinese but the corpus is mainly English, translate the research object, institution, mechanism, and formal objects into English scholarly terminology before lexical search; unsegmented Chinese FTS is not an English-corpus retrieval strategy. If paper metadata is insufficient, vocabulary is misaligned, a known relevant work is missed, or an absence/collision judgment is consequential, trigger bounded full-text rescue and aggregate matching passages back to `paper_id`; never treat anonymous chunks as nearest-neighbor papers or as verified evidence. Add distinct query branches, a layer-appropriate semantic arm, wider sources, reranking, or deeper reading only when mismatch, misses, uncertainty, or collision risk warrants it. Do not prescribe a fixed branch count or promote one semantic model across paper and passage layers without separate benchmarks.
 
-## Project answers from the research state
+For ordinary evidence needs, retrieval stops when more searching is unlikely to change a viable formalization, live candidate set, evidence conflict, assumption justification, claim boundary, or contribution assessment. For “has anyone done this?” claims, deliberately vary terminology and structural formulations, widen sources and depth, inspect missed-retrieval risk, and retain the corpus fingerprint and coverage boundary. A citation that changes none of these is decorative and should not drive the answer.
 
-Do not expose internal checklists or every failed branch. For a consequential source-based issue, separate when useful:
+Published papers, appendices, corrections, and review-process materials have different evidentiary roles. Reviewer/editor/response materials can establish that a concern or revision claim occurred; they do not establish formal truth or a journal-wide rule.
 
-1. what the source actually does;
-2. what the canonical/independent model analysis implies;
-3. whether the mechanism interpretation is supported;
-4. the exact scope of the certified or unresolved conclusion;
-5. the smallest next action that could change the research decision.
+Treat a target paper's main article and linked appendix as one model-bearing source set whenever assumptions, omitted cases, proofs, extensions, or robustness results can change the reconstruction or evaluation. Do this for faithful reading as well as manuscript drafting. Do not inspect `OTHER`/`REPLICATION_PACKAGE` artifacts by default; open them only when code, data, numerical implementation, or an implemented assumption can change the current judgment.
 
-When the source already treats a material boundary, threshold, exception, deviation, robustness case, or equilibrium branch, say so before giving the independent judgment. Do not present an author-addressed issue as a new discovery.
+## Formal conclusions
 
-For broad audits, surface **newly discovered model-level issues** even when they are not attached to an author-named proposition, but rank them by downstream consequence. Do not manufacture novelty by listing minor inconsistencies.
+Verification remains complete even when presentation is compressed. Before a consequential `PASS`, existence, uniqueness, globality, equilibrium, mechanism, or welfare claim, verify all source/model objects, constraints, domains, boundary regimes, deviations, and claim scope activated by that conclusion.
 
-## Answer projection and display
+Use:
 
-Finish the required P0–P7 work and formal/evidence checks before composing. Before compression, confirm that every primitive, timing/information condition, action, payoff or constraint, and solution/equilibrium concept needed for the current derivation is specified or explicitly unresolved; omitting an object from the answer never permits omitting its verification. Lead with the current judgment, two to four decisive reasons, and the recommended next action. For “pick one direction,” show the primary recommendation, biggest risk, minimum viable model, and at most one runner-up unless the user asks for the full candidate set.
+- **PASS (scope)** only for the domain actually checked;
+- **FAIL** only with a concrete violated condition, counterexample, infeasible candidate, omitted branch, or inconsistency;
+- **WARNING** for a material unresolved risk that does not yet invalidate the scoped claim;
+- **INCONCLUSIVE** when information, mathematics, dependencies, or evidence can still change the result;
+- **NOT APPLICABLE** when the model does not activate the check.
 
-Use explanation mode **AUTO**. Infer conceptual depth and formal display depth separately. A short prompt does not imply low expertise; a technical prompt does not request extensive derivation. Carry forward explicit preferences for directness, plain language, key formulas only, or complete proof until the context changes.
+Source-stated, derived, numerically observed, formally verified, literature-supported, and mechanism-isolated claims are not interchangeable.
 
-Apply the **Math Display Gate** before every equation:
+## Workspace, state, and outputs
 
-1. Does it change the judgment, mechanism, claim boundary, or action?
-2. Must the user see it to understand or audit that point?
+Evidence roots are read-only corpora, never project workspaces. Before any persistent write, identify an existing user-designated research-project or output directory outside every paper/process root. Do not infer that the current working directory is safe. If persistence is necessary and no safe workspace is known, ask once for its location; otherwise keep the task in conversation context.
 
-Hide it by default when the second answer is no, while still performing the derivation and all required Python/SymPy or formal checks. Treat algebra, posterior expansions, integrations, derivative chains, second-order conditions, and symbolic simplifications as **VERIFICATION_MATH**. Show **MECHANISM_EQUATION** only when its structure explains the mechanism; show **DECISION_RESULT_EQUATION** when it directly changes a claim. Prefer the result to the proof chain. For requests about how a model is solved, explain the solution sequence, thresholds, and backward-induction links before offering full derivations.
+For a recurring corpus, reuse a root-scoped profile stored outside all evidence roots. On first contact, inspect metadata inventory and a bounded content sample to record language, organization, metadata sources, and unknown patterns. Profile counts are observations, not a frozen allowlist. Incrementally synchronize additions, deletions, modifications, and renames; audit or revise the profile only when a new pattern changes interpretation. Automatically observed patterns are diagnostic only; filename codes may change role, version, access, or attachment classification only when user-confirmed. An unrenamed file remains usable through source metadata or provisional identity. Do not relearn an unchanged corpus in every conversation.
 
-Allocate explanation depth to the reasoning node that carries the requested conclusion. In a paper overview, identify that node without expanding every derivation. If the user asks why a particular step holds, deepen that step until its inputs, logic, and downstream consequence are auditable. The bottleneck may be mathematical, but it may instead be timing, information, control rights, a benchmark, an assumption, or a best-response dependency. Response compression must not hide the node needed to understand the claim.
+Do not create project state for short tasks. For genuinely cross-session work, create `<research-workspace>/.modeling/current_model.md` from [current_model.md](templates/current_model.md). Keep only the current research object and model, live uncertainties, tested claims, and short guards against reviving materially rejected branches.
 
-Before a retained formula, explain its purpose and decision relevance in plain language; after it, state its implication. Introduce only symbols needed at that point. Offer one optional derivation next step rather than expanding all hidden work.
+Keep live candidate branches inside `current_model.md`; do not create ad hoc `candidate_A.md`, `candidate_B.md`, or alternate `.modeling` directories by default. Create standalone files only when the user requests a deliverable or the artifact has continuing value. Put them in the approved research workspace and use descriptive, stable names rather than letter-only names.
 
-Use concise, natural researcher-to-researcher prose. State each judgment fully once; later text should add evidence, boundary, or action implications. Avoid stock contrast templates, repeated summaries, slogan-like claims, unnecessary bolding, rhetorical questions, invented labels/acronyms, excessive headings, and tables that do not improve a real comparison.
+Mark affected results stale after a depended-on primitive, timing/information rule, action domain, payoff/constraint, solution concept, or mechanism-defining assumption changes. On resume, verify saved state against the latest equations and sources before relying on it.
 
-Read [evidence_policy.md](references/evidence_policy.md) for citation rendering and local-path presentation. Keep internal evidence cards, check inventories, retrieval traces, and provenance fields out of the default answer. Keep retrieval score separate from evidence strength. Cite inspected content only.
+Invalidate saved evidence by dependency, not by one global corpus switch: `SOURCE_STALE` when the supporting artifact hash/locator changes; `BIBLIOGRAPHY_STALE` when verified identity-display fields or their provenance changes; `COVERAGE_STALE` when the authorized roots or eligible paper set changes for an absence/collision claim; and `RANKING_STALE` when searchable metadata or full text, schema, retrieval configuration, or model changes for a saved ranking. A new unrelated paper does not invalidate an already verified positive claim about Paper A, although it can invalidate a claim that no relevant paper exists.
 
-Use **PASS** only with explicit scope, **WARNING** for a material risk that does not yet invalidate the claim, **INCONCLUSIVE** for insufficient or conflicting information, mathematics, dependencies, or evidence, and **NOT APPLICABLE** for checks the structure does not activate. Never fill gaps from an abstract, fabricate support, hide a material boundary, or collapse distinct formalizations for brevity.
+## User-facing answer
 
-Continue autonomously on source-resolvable and technical choices. Give a professional recommendation rather than turning them into a menu. Surface a change before proceeding when it materially changes the phenomenon being explained, research question, institution, or contribution object; record the accepted change in the active state.
+Complete the required reasoning and checks before composing. Lead with the current judgment, decisive reasons, and next action. Show evidence and boundaries that help the present decision; keep retrieval traces and internal check inventories hidden.
 
-Update the Working Model Draft after formal changes. **Draft follows model; draft never determines model.** Once the formal state is stable enough, support model-facing writing—setting, timing, solution logic, mechanism, proposition scope, and limitations—without treating polished prose as validation. Full journal-style writing and copyediting are not guaranteed by this modeling skill.
+Allocate depth to the load-bearing reasoning node. For solution explanations, show both order and dependency: state what later-stage object enters which earlier objective, constraint, belief, or equilibrium condition. Display an equation only when the user needs it to understand or audit the judgment, mechanism, boundary, or action. Hidden algebra must still be performed.
 
-## Resume
+Give a recommendation instead of returning technical choices to the user. Surface one batched decision only when the unresolved choice depends on the user's research objective, institutional knowledge, or acceptance of a change to the research object.
 
-Reconstruct state from the conversation and supplied artifacts first. If `.modeling/current_model.md` exists, verify it against the latest formal expressions, canonical model map, constraints, mechanism dependencies, and source material; identify stale claims or prose, and continue at the earliest unresolved pass. Treat saved narrative as a convenience, not authority over the model.
+If external discovery identifies a paper that is not locally available, suggest obtaining it only when reading it is genuinely needed to resolve the current decision. Keep the suggestion to `English title — authors — why this paper is needed`; omit DOI, year, journal, links, and acquisition instructions unless requested.
+
+When papers materially informed the answer, end with `参考论文` and list only `Authors — Verified English Title（忠实中文译名）`. Omit year, journal, DOI, paths, evidence labels, and full reference formatting. Verify the English title from the paper or reliable bibliographic metadata rather than trusting the local filename; translate from that verified title. Do not add the section when no paper materially informed the answer. Manuscript artifacts may still use the target journal's required citation style when the deliverable itself requires it.
+
+Update model-facing prose after formal changes. **Draft follows model; draft never determines model.** Support setting, timing, mechanism, solution logic, proposition scope, and limitations; publication-ready manuscript writing remains a separate task.
